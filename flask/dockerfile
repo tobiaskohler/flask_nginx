@@ -5,7 +5,7 @@ FROM python:3.7.2-stretch
 WORKDIR /app
 
 #copy content from current dir (.) to /app
-COPY . /app
+ADD . /app
 
 #install dependencies (requirements.txt)
 RUN pip install -r requirements.txt
