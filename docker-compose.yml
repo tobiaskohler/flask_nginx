@@ -1,0 +1,24 @@
+version: "3.4"
+
+services:
+
+  #define individual services, one service per image (and one folder per container, at least try to do so)
+
+  flask:
+    build: ./flask  #searches for dockerfiles in the named dir and installs container from that dockerfile
+    container_name: flask
+    restart: always
+    environment:    #passes environment variables to flask (you could pass DB_USERNAME e.g. also)
+      - APP_NAME = MyFlaskApp
+    expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
+      - 8080
+    volumes:
+      - ./flask:/app:Z
+
+
+  nginx:
+    build: ./nginx  
+    container_name: nginx
+    restart: always
+    ports:         #ports allows to map ports from HOST:CONTAINER (Port 80 on Host equals Port 80 of nginx Container)
+      - "80:80"

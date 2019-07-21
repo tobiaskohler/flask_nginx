@@ -1,0 +1,16 @@
+#use python 3.7.2 image as a base to build flask-stack on it (strech means based on Debian 9.0)
+FROM python:3.7.2-stretch
+
+#set wor dir of container to /app (/app == container's root)
+WORKDIR /app
+
+#copy content from current dir (.) to /app
+COPY . /app
+
+#install dependencies (requirements.txt)
+RUN pip install -r requirements.txt
+
+#run command to start uWSGI-Server
+CMD ["uwsgi", "app.ini"]
+
+    
