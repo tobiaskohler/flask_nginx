@@ -27,7 +27,10 @@ services:
     image: mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password123
+      MYSQL_USER: user123
+      MYSQL_PASSWORD: password123
+      MYSQL_DATABASE: webapp
     ports:
       - "3306:3306"
   
@@ -55,4 +58,37 @@ services:
     volumes:
       - "./rabbitmq:/var/lib/rabbitmq"  #adapt host-side (left) to your respective directory
 
-    
+#sql alchemy einbauen und testen!
+#volume einbauen für datenbank
+
+#rabbitmq volume einbauen
+
+
+#celery implementieren:
+
+
+  # celery-worker1:
+  #   build:
+  #     context: .
+  #   hostname: worker_1
+  #   entrypoint: celery
+  #   command: -A workerA worker --loglevel=info -Q workerA
+  #   volumes:
+  #     - .:/app
+  #   links:
+  #     - rabbit
+  #   depends_on:
+  #     - rabbit
+
+  # celery-beat:
+  #   build:
+  #     context: .
+  #   hostname: worker_1
+  #   entrypoint: celery
+  #   command: -A workerA worker --loglevel=info -Q workerA
+  #   volumes:
+  #     - .:/app
+  #   links:
+  #     - rabbit
+  #   depends_on:
+  #     - rabbit
