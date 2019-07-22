@@ -1,22 +1,58 @@
-version: "3.4"
+version: "3.7"
 
 services:
 
   #define individual services, one service per image (and one folder per container, at least try to do so)
 
-  flask:
+  flask02:
     build: ./flask  #searches for dockerfiles in the named dir and installs container from that dockerfile
     container_name: flask
     restart: always
     environment:    #passes environment variables to flask (you could pass DB_USERNAME e.g. also)
-      - APP_NAME = MyFlaskApp
+      FLASK_DEBUG: "True"
+      FLASK_APP: "flask_app.py"
     expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
       - 8080
+        
 
-
-  nginx:
+  nginx02:
     build: ./nginx  
     container_name: nginx
     restart: always
     ports:         #ports allows to map ports from HOST:CONTAINER (Port 80 on Host equals Port 80 of nginx Container)
       - "80:80"
+
+
+  db02:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+  
+
+  adminer02:        #only for development purposes
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080" #port 8080 must be on right side, never change that
+
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "user123"
+      RABBITMQ_DEFAULT_PASS: "password123"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
+    volumes:
+      - "./rabbitmq:/var/lib/rabbitmq"  #adapt host-side (left) to your respective directory
+
+    
