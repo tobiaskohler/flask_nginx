@@ -13,9 +13,10 @@ services:
       FLASK_APP: "flask_app.py"
     expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
       - 8080
-    volumes:
-      - "./flask:/app"
-        
+    depends_on:     #docker-compose up will start services in dependency order, so first nginx and mariadb will be started, dann flask framework
+      - nginx02
+      - db02
+
 
   nginx02:
     build: ./nginx  
@@ -35,13 +36,17 @@ services:
       MYSQL_DATABASE: webapp
     ports:
       - "3306:3306"
-  
+    volumes:
+      - db_storage:/var/lib/mysql
+
 
   adminer02:        #only for development purposes
     image: adminer
     restart: always
     ports:
       - "8081:8080" #port 8080 must be on right side, never change that
+    depends_on:
+      - db02
 
 
   rabbitmq:
@@ -58,12 +63,15 @@ services:
     labels:
       NAME: "rabbitmq1"
     volumes:
-      - "./rabbitmq:/var/lib/rabbitmq"  #adapt host-side (left) to your respective directory
+      - rabbitmq_storage:/var/lib/rabbitmq  #adapt host-side (left) to your respective directory
+
+volumes:                                    #all volumes can be found in docker file directory on the host
+  db_storage:
+  rabbitmq_storage:
 
 
+  
 
-
-#sql alchemy einbauen und testen!
 #volume einbauen für datenbank
 
 
