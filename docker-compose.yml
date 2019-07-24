@@ -13,6 +13,8 @@ services:
       FLASK_APP: "flask_app.py"
     expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
       - 8080
+    volumes:
+      - "./flask:/app"
         
 
   nginx02:
@@ -58,10 +60,11 @@ services:
     volumes:
       - "./rabbitmq:/var/lib/rabbitmq"  #adapt host-side (left) to your respective directory
 
+
+
+
 #sql alchemy einbauen und testen!
 #volume einbauen für datenbank
-
-#rabbitmq volume einbauen
 
 
 #celery implementieren:

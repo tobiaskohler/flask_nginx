@@ -1,8 +1,11 @@
 from app import app
+from app import db 
+from app.models import Users
+
 
 @app.route("/")
 def index():
-    return "***Hello 1from Flask <3"
+    return "***Hello from Flask <3"
     
 
 @app.route("/users/<username>", methods=["GET", "POST"])
