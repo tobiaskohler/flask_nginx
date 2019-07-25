@@ -4,18 +4,38 @@ services:
 
   #define individual services, one service per image (and one folder per container, at least try to do so)
 
-  flask02:
-    build: ./flask  #searches for dockerfiles in the named dir and installs container from that dockerfile
-    container_name: flask
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: rabbitmq
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      # RABBITMQ_DEFAULT_VHOST: "/webapp"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
+    volumes:
+      - rabbitmq_storage:/var/lib/rabbitmq  #adapt host-side (left) to your respective directory
+
+  db02:
+    image: mariadb
     restart: always
-    environment:    #passes environment variables to flask (you could pass DB_USERNAME e.g. also)
-      FLASK_DEBUG: "True"
-      FLASK_APP: "flask_app.py"
-    expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
-      - 8080
-    depends_on:     #docker-compose up will start services in dependency order, so first nginx and mariadb will be started, dann flask framework
-      - nginx02
-      - db02
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_storage:/var/lib/mysql
 
 
   nginx02:
@@ -26,18 +46,29 @@ services:
       - "80:80"
 
 
-  db02:
-    image: mariadb
+  flask:
+    build: ./flask  #searches for dockerfiles in the named dir and installs container from that dockerfile
+    container_name: flask
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: password123
-      MYSQL_USER: user123
-      MYSQL_PASSWORD: password123
-      MYSQL_DATABASE: webapp
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_storage:/var/lib/mysql
+    env_file:
+      - .env
+    environment:    #passes environment variables to flask (you could pass DB_USERNAME e.g. also)
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      FLASK_APP: ${FLASK_APP}
+    expose:         #exposes only within internal docker network, so flask will be exposed to port 8080 of the  docker internal network. since the uWSGI config (app.ini) listens to port 8080, this is the appropriate configuration
+      - 8080
+    depends_on:     #docker-compose up will start services in dependency order, so first nginx and mariadb will be started, dann flask framework
+      - nginx02
+      - db02
+
+  worker:
+    build: ./worker
+    container_name: worker
+    restart: always
+    links:
+      - rabbitmq
+    depends_on:
+      - rabbitmq
 
 
   adminer02:        #only for development purposes
@@ -48,48 +79,18 @@ services:
     depends_on:
       - db02
 
-
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    hostname: "rabbitmq"
-    environment:
-      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
-      RABBITMQ_DEFAULT_USER: "user123"
-      RABBITMQ_DEFAULT_PASS: "password123"
-      RABBITMQ_DEFAULT_VHOST: "/"
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    labels:
-      NAME: "rabbitmq1"
-    volumes:
-      - rabbitmq_storage:/var/lib/rabbitmq  #adapt host-side (left) to your respective directory
-
-volumes:                                    #all volumes can be found in docker file directory on the host
-  db_storage:
-  rabbitmq_storage:
-
-
-  
-
-#volume einbauen für datenbank
-
-
-#celery implementieren:
-
-
   # celery-worker1:
-  #   build:
-  #     context: .
-  #   hostname: worker_1
-  #   entrypoint: celery
-  #   command: -A workerA worker --loglevel=info -Q workerA
-  #   volumes:
-  #     - .:/app
-  #   links:
-  #     - rabbit
-  #   depends_on:
-  #     - rabbit
+  #   build: ./flask
+  #   hostname: worker1
+  #   command: >
+  #     sh -c "cd /app && 
+  #           celery -A tasks.celery worker --loglevel=info"
+    # volumes:
+    #   - celery_storage:/app
+    # depends_on:
+    #   - rabbitmq
+    # links:
+    #   - rabbitmq
 
   # celery-beat:
   #   build:
@@ -103,3 +104,8 @@ volumes:                                    #all volumes can be found in docker 
   #     - rabbit
   #   depends_on:
   #     - rabbit
+
+volumes:                                    #all volumes can be found in docker file directory on the host
+  db_storage:
+  rabbitmq_storage:
+  celery_storage:

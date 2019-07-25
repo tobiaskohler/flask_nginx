@@ -1,7 +1,8 @@
 from app import app
 from app import db 
 from app.models import Users
-
+from app.worker import celery
+from celery.execute import send_task
 
 @app.route("/")
 def index():
@@ -27,4 +28,8 @@ def get_user(username):
     else:
         return f"{get_user.username} ####wurde gefunden"
 
+@app.route("/testtask/<n>", methods=["GET", "POST"])
+def testtask(n):
+    testtask = celery.send_task('testtask', [n])
     
+    return testtask

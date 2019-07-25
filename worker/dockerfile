@@ -2,13 +2,13 @@
 FROM python:3.7.2-stretch
 
 #set wor dir of container to /app (/app == container's root)
-WORKDIR /app
+WORKDIR /worker
 
 #copy content from current dir (.) to /app
-ADD . /app
+ADD . /worker
 
 #install dependencies (requirements.txt)
 RUN pip install -r requirements.txt
 
-#run command to start uWSGI-Server
-CMD ["uwsgi", "app.ini"]
+#run celery command
+ENTRYPOINT celery -A tasks worker --loglevel=info
