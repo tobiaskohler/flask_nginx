@@ -21,7 +21,7 @@ intervals==0.8.1
 itsdangerous==1.1.0
 Jinja2==2.10.1
 lazy==1.4
-Mako==1.0.13
+Mako==1.2.2
 MarkupSafe==1.1.1
 oauth2==1.9.0.post1
 oauthlib==3.0.2
